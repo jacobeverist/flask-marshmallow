@@ -20,6 +20,7 @@ from . import fields
 from .schema import Schema
 
 has_sqla = False
+has_mme = False
 try:
     import flask_sqlalchemy  # flake8: noqa
 except ImportError:
@@ -34,6 +35,21 @@ else:
         )
     else:
         has_sqla = True
+
+try:
+    import flask_mongoengine  # flake8: noqa
+except ImportError:
+    has_mme = False
+else:
+    try:
+        from . import mongoengine
+    except ImportError:
+        warnings.warn(
+            'Flask-mongoengine integration requires '
+            'marshmallow-mongoengine to be installed.'
+        )
+    else:
+        has_mme = True
 
 __version__ = '0.8.0'
 __author__ = 'Steven Loria'
@@ -107,7 +123,11 @@ class Marshmallow(object):
 
     def __init__(self, app=None):
         self.Schema = Schema
-        if has_sqla:
+
+        if has_mme:
+            self.ModelSchema = mongoengine.ModelSchema
+            self.HyperlinkRelated = mongoengine.HyperlinkRelated
+        elif has_sqla:
             self.ModelSchema = sqla.ModelSchema
             self.HyperlinkRelated = sqla.HyperlinkRelated
         _attach_fields(self)
@@ -122,7 +142,11 @@ class Marshmallow(object):
         app.extensions = getattr(app, 'extensions', {})
 
         # If using Flask-SQLAlchemy, attach db.session to ModelSchema
+        if has_mme and 'mongoengine' in app.extensions:
+            db = app.extensions['mongoengine'].db
+
         if has_sqla and 'sqlalchemy' in app.extensions:
             db = app.extensions['sqlalchemy'].db
             self.ModelSchema.OPTIONS_CLASS.session = db.session
+
         app.extensions[EXTENSION_NAME] = self
