@@ -15,7 +15,7 @@ def test(ctx, watch=False, last_failing=False):
     Note: --watch requires pytest-xdist to be installed.
     """
     import pytest
-    flake(ctx)
+    #flake(ctx)
     args = []
     if watch:
         args.append('-f')

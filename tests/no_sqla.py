@@ -5,6 +5,7 @@ from flask_marshmallow.sqla import HyperlinkRelated
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.wrappers import BaseResponse
 import pytest
+import sys
 
 from tests.conftest import Bunch
 from tests.markers import marshmallow_2_req
@@ -78,6 +79,10 @@ class TestSQLAlchemy:
         db.drop_all()
 
     def test_can_declare_model_schemas(self, extma, models, db):
+
+        print("extma:", extma.ModelSchema)
+        sys.stdout.flush()
+
         class AuthorSchema(extma.ModelSchema):
             class Meta:
                 model = models.Author

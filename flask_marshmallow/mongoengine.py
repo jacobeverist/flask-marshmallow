@@ -7,12 +7,27 @@
     `ModelSchema <marshmallow_sqlalchemy.ModelSchema>` classes that use the scoped session
     from Flask-SQLALchemy.
 """
-from flask import url_for, current_app
+from flask import current_app, url_for
 from six.moves.urllib import parse
 
 import marshmallow_mongoengine as mme
 from marshmallow.exceptions import ValidationError
 from .schema import Schema
+
+from werkzeug.routing import BaseConverter, ValidationError
+from itsdangerous import base64_encode, base64_decode
+from bson.objectid import ObjectId
+from bson.errors import InvalidId
+
+class ObjectIDConverter(BaseConverter):
+    def to_python(self, value):
+        try:
+            return ObjectId(value)
+        except (InvalidId, ValueError, TypeError):
+            raise ValidationError()
+    def to_url(self, value):
+        return str(value)
+
 
 class SchemaOpts(mme.SchemaOpts):
     """Schema options for `~flask_marshmallow.sqla.ModelSchema`.
@@ -55,6 +70,9 @@ class HyperlinkRelated(mme.fields.GenericReference):
     def _serialize(self, value, attr, obj):
         key = super(HyperlinkRelated, self)._serialize(value, attr, obj)
         kwargs = {self.url_key: key}
+        print("endpoint =", self.endpoint)
+        print("external =", self.external)
+        print("kwargs =", kwargs)
         return url_for(self.endpoint, _external=self.external, **kwargs)
 
     def _deserialize(self, value, *args, **kwargs):
@@ -73,6 +91,7 @@ class HyperlinkRelated(mme.fields.GenericReference):
             raise ValidationError(
                 'URL pattern "{self.url_key}" not found in {kwargs!r}'.format(**locals())
             )
+        print("input:", self.url_key, args, kwargs)
         return super(HyperlinkRelated, self)._deserialize(kwargs[self.url_key], *args, **kwargs)
 
     @property

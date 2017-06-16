@@ -21,20 +21,20 @@ from .schema import Schema
 
 has_sqla = False
 has_mme = False
-try:
-    import flask_sqlalchemy  # flake8: noqa
-except ImportError:
-    has_sqla = False
-else:
-    try:
-        from . import sqla
-    except ImportError:
-        warnings.warn(
-            'Flask-SQLAlchemy integration requires '
-            'marshmallow-sqlalchemy to be installed.'
-        )
-    else:
-        has_sqla = True
+#try:
+#    import flask_sqlalchemy  # flake8: noqa
+#except ImportError:
+#    has_sqla = False
+#else:
+#    try:
+#        from . import sqla
+#    except ImportError:
+#        warnings.warn(
+#            'Flask-SQLAlchemy integration requires '
+#            'marshmallow-sqlalchemy to be installed.'
+#        )
+#    else:
+#        has_sqla = True
 
 try:
     import flask_mongoengine  # flake8: noqa
@@ -143,7 +143,11 @@ class Marshmallow(object):
 
         # If using Flask-SQLAlchemy, attach db.session to ModelSchema
         if has_mme and 'mongoengine' in app.extensions:
-            db = app.extensions['mongoengine'].db
+            print(app.extensions)
+            print(app.extensions['mongoengine'])
+            #db = app.extensions['mongoengine'].db
+            from . import mongoengine
+            app.url_map.converters['objectid'] = mongoengine.ObjectIDConverter
 
         if has_sqla and 'sqlalchemy' in app.extensions:
             db = app.extensions['sqlalchemy'].db
